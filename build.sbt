@@ -13,3 +13,11 @@ version := "1.0-SNAPSHOT"
 //     )),
 //     name := "hello-world"
 //   )
+
+scalacOptions ++= Seq("-unchecked", "-deprecation", "-feature")
+
+resolvers += "ruimo.com" at "http://static.ruimo.com/release"
+
+// https://mvnrepository.com/artifact/org.specs2/specs2-core
+libraryDependencies += "org.specs2" %% "specs2-core" % "4.5.1" % Test
+libraryDependencies += "com.ruimo" %% "scoins" % "1.22"
