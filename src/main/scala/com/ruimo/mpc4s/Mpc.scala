@@ -37,5 +37,10 @@ object Mpc {
       Request.clearError.writeln(out)
       Response.clearError(in)
     }
+
+    def lsInfo(path: Option[String]): Response.LsInfo = {
+      Request.lsInfo(path).writeln(out)
+      Response.lsInfo(in)
+    }
   }
 }

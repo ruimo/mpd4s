@@ -14,6 +14,8 @@ version := "1.0-SNAPSHOT"
 //     name := "hello-world"
 //   )
 
+libraryDependencies += "org.slf4j" % "slf4j-api" % "1.7.26"
+
 scalacOptions ++= Seq("-unchecked", "-deprecation", "-feature")
 
 resolvers += "ruimo.com" at "http://static.ruimo.com/release"
