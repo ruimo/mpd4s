@@ -27,12 +27,12 @@ object RequestParam {
         }
       }
 
-    new StringParam(escape())
+    new RequestParam[String] {
+      val toStringParam = escape()
+    }
   }
 
   implicit def fromInt(i: Int): RequestParam[Int] = new RequestParam[Int] {
     val toStringParam = i.toString
   }
-
-  private class StringParam(val toStringParam: String) extends RequestParam[String]
 }
