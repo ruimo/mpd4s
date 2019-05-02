@@ -26,12 +26,23 @@ trait Request {
 
 object Request {
   class Command(val toCommand: String) extends Request
-  class ClearError extends Command("clearerror")
+  object clearError extends Command("clearerror")
+  object stop extends Command("stop")
+  object clear extends Command("clear")
 
   class LsInfo(path: Option[String]) extends Command("lsinfo") {
     override def args = path.toList
   }
 
-  val clearError: Request = new ClearError()
+  class Add(path: String) extends Command("add") {
+    override def args = imm.Seq(path)
+  }
+
+  class Play(idx: Option[Int]) extends Command("play") {
+    override def args = idx.toList.map(_.toString)
+  }
+
   def lsInfo(path: Option[String]): Request = new LsInfo(path)
+  def add(path: String): Request = new Add(path)
+  def play(idx: Option[Int]): Request = new Play(idx)
 }

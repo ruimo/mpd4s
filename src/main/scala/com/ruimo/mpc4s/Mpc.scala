@@ -38,9 +38,29 @@ object Mpc {
       Response.clearError(in)
     }
 
+    def stop(): Response.Stop = {
+      Request.stop.writeln(out)
+      Response.stop(in)
+    }
+
+    def clear(): Response.Clear = {
+      Request.clear.writeln(out)
+      Response.clear(in)
+    }
+
     def lsInfo(path: Option[String]): Response.LsInfo = {
       Request.lsInfo(path).writeln(out)
       Response.lsInfo(in)
+    }
+
+    def add(path: String): Response.Add = {
+      Request.add(path).writeln(out)
+      Response.add(in)
+    }
+
+    def play(idx: Option[Int]): Response.Play = {
+      Request.play(idx).writeln(out)
+      Response.play(in)
     }
   }
 }

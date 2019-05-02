@@ -36,9 +36,13 @@ object Response {
   case class Fail(errorNo: Int, commandIdx: Int, command: String, message: String) extends FinalResponse
 
   trait ClearError extends Response
+  trait Stop extends Response
+  trait Clear extends Response
+  trait Add extends Response
   trait LsInfo extends Response {
     val info: imm.Seq[LsInfoEntry]
   }
+  trait Play extends Response
   object LsInfo {
     val PlayListPattern = """playlist: (.*)""".r
     val FilePattern = """file: (.*)""".r
@@ -50,6 +54,10 @@ object Response {
   private class ResponseBase(val finalResponse: FinalResponse)
 
   private class ClearErrorImpl(finalResponse: FinalResponse) extends ResponseBase(finalResponse) with ClearError
+  private class StopImpl(finalResponse: FinalResponse) extends ResponseBase(finalResponse) with Stop
+  private class ClearImpl(finalResponse: FinalResponse) extends ResponseBase(finalResponse) with Clear
+  private class AddImpl(finalResponse: FinalResponse) extends ResponseBase(finalResponse) with Add
+  private class PlayImpl(finalResponse: FinalResponse) extends ResponseBase(finalResponse) with Play
   private class LsInfoImpl(
     finalResponse: FinalResponse,
     val info: imm.Seq[LsInfoEntry]
@@ -60,6 +68,42 @@ object Response {
       new ClearErrorImpl(Fail(errorNo.toInt, commandIdx.toInt, command, message))
     case OkPattern() =>
       new ClearErrorImpl(Ok)
+    case _ @ l =>
+      throw new IllegalArgumentException("Invalid response '" + l + "'")
+  }
+
+  def stop(in: BufferedReader): Stop = in.readLine match {
+    case FailPattern(errorNo, commandIdx, command, message) =>
+      new StopImpl(Fail(errorNo.toInt, commandIdx.toInt, command, message))
+    case OkPattern() =>
+      new StopImpl(Ok)
+    case _ @ l =>
+      throw new IllegalArgumentException("Invalid response '" + l + "'")
+  }
+
+  def add(in: BufferedReader): Add = in.readLine match {
+    case FailPattern(errorNo, commandIdx, command, message) =>
+      new AddImpl(Fail(errorNo.toInt, commandIdx.toInt, command, message))
+    case OkPattern() =>
+      new AddImpl(Ok)
+    case _ @ l =>
+      throw new IllegalArgumentException("Invalid response '" + l + "'")
+  }
+
+  def play(in: BufferedReader): Play = in.readLine match {
+    case FailPattern(errorNo, commandIdx, command, message) =>
+      new PlayImpl(Fail(errorNo.toInt, commandIdx.toInt, command, message))
+    case OkPattern() =>
+      new PlayImpl(Ok)
+    case _ @ l =>
+      throw new IllegalArgumentException("Invalid response '" + l + "'")
+  }
+
+  def clear(in: BufferedReader): Clear = in.readLine match {
+    case FailPattern(errorNo, commandIdx, command, message) =>
+      new ClearImpl(Fail(errorNo.toInt, commandIdx.toInt, command, message))
+    case OkPattern() =>
+      new ClearImpl(Ok)
     case _ @ l =>
       throw new IllegalArgumentException("Invalid response '" + l + "'")
   }
