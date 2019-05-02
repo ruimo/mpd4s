@@ -1,7 +1,7 @@
 scalaVersion := "2.12.8"
 
 name := "mpc4s"
-organization := "ruimo.com"
+organization := "com.ruimo"
 version := "1.0-SNAPSHOT"
 
 //libraryDependencies += "org.typelevel" %% "cats-core" % "1.6.0"
