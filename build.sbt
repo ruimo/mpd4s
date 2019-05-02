@@ -14,6 +14,13 @@ version := "1.0-SNAPSHOT"
 //     name := "hello-world"
 //   )
 
+publishTo := Some(
+  Resolver.file(
+    "mpc4s",
+    new File(Option(System.getenv("RELEASE_DIR")).getOrElse("/tmp"))
+  )
+)
+
 libraryDependencies += "org.slf4j" % "slf4j-api" % "1.7.26"
 
 scalacOptions ++= Seq("-unchecked", "-deprecation", "-feature")
