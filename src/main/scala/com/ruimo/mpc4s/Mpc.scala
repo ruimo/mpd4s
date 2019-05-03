@@ -88,5 +88,20 @@ object Mpc {
       Request.stop.writeln(out)
       this
     }
+
+    def clear(): Unit = {
+      Request.clear.writeln(out)
+      this
+    }
+
+    def add(path: String): Unit = {
+      Request.add(path).writeln(out)
+      this
+    }
+
+    def play(idx: Option[Int]): Unit = {
+      Request.play(idx).writeln(out)
+      this
+    }
   }
 }
