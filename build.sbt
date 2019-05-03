@@ -23,6 +23,8 @@ publishTo := Some(
 
 libraryDependencies += "org.slf4j" % "slf4j-api" % "1.7.26"
 
+libraryDependencies += "com.typesafe.play" %% "play-json" % "2.7.3"
+
 scalacOptions ++= Seq("-unchecked", "-deprecation", "-feature")
 
 resolvers += "ruimo.com" at "http://static.ruimo.com/release"

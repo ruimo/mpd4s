@@ -8,6 +8,7 @@ import scala.util.control.TailCalls.TailRec
 import scala.util.control.TailCalls._
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import play.api.libs.json._
 
 object Response {
   val logger = LoggerFactory.getLogger(getClass)
@@ -33,6 +34,45 @@ object Response {
     case class Directory(path: String, lastModified: Instant) extends LsInfoEntry
     case class File(path: String, lastModified: Instant, length: Int) extends LsInfoEntry
     case class PlayList(path: String, lastModified: Instant) extends LsInfoEntry
+
+    implicit object Format extends Format[LsInfoEntry] {
+      override def reads(jv: JsValue): JsResult[LsInfoEntry] = JsSuccess(
+        (jv \ "type").as[String] match {
+          case "directory" => Directory(
+            (jv \ "path").as[String],
+            Instant.ofEpochMilli((jv \ "lastModified").as[String].toLong)
+          )
+          case "file" => File(
+            (jv \ "path").as[String],
+            Instant.ofEpochMilli((jv \ "lastModified").as[String].toLong),
+            (jv \ "length").as[Int]
+          )
+          case "playlist" => PlayList(
+            (jv \ "path").as[String],
+            Instant.ofEpochMilli((jv \ "lastModified").as[String].toLong)
+          )
+        }
+      )
+
+      override def writes(in: LsInfoEntry): JsValue = in match {
+        case Directory(path, lastModified) => Json.obj(
+          "type" -> "directory",
+          "path" -> path,
+          "lastModified" -> lastModified.toEpochMilli.toString
+        )
+        case File(path, lastModified, length) => Json.obj(
+          "type" -> "file",
+          "path" -> path,
+          "lastModified" -> lastModified.toEpochMilli.toString,
+          "length" -> length
+        )
+        case PlayList(path, lastModified) => Json.obj(
+          "type" -> "playlist",
+          "path" -> path,
+          "lastModified" -> lastModified.toEpochMilli.toString
+        )
+      }
+    }
   }
 
   trait LsInfo {
@@ -44,6 +84,11 @@ object Response {
     def apply(value: Int): Volume =
       if (value < 0 || 100 < value) throw new IllegalArgumentException("Volume(=" + value + ") should be 0 - 100")
       else new Volume(value)
+
+    implicit object Format extends Format[Volume] {
+      override def reads(jv: JsValue): JsResult[Volume] = JsSuccess(Volume(jv.as[Int]))
+      override def writes(in: Volume): JsValue = JsNumber(in.value)
+    }
   }
 
   sealed trait SinglePlay
@@ -58,6 +103,20 @@ object Response {
       case "1" => Yes
       case "oneshot" => OneShot
       case _ => throw new IllegalArgumentException("'" + s + "' is invalid for single.")
+    }
+
+    implicit object Format extends Format[SinglePlay] {
+      override def reads(jv: JsValue): JsResult[SinglePlay] = JsSuccess(
+        SinglePlay(jv.as[String])
+      )
+
+      override def writes(in: SinglePlay): JsValue = JsString(
+        in match {
+          case No => "0"
+          case Yes => "1"
+          case OneShot => "oneshot"
+        }
+      )
     }
   }
 
@@ -74,20 +133,50 @@ object Response {
       case "pause" => Pause
       case _ => throw new IllegalArgumentException("'" + s + "' is invalid for play state.")
     }
+
+    implicit object Format extends Format[PlayState] {
+      override def reads(jv: JsValue): JsResult[PlayState] = JsSuccess(
+        PlayState(jv.as[String])
+      )
+
+      override def writes(in: PlayState): JsValue = JsString(
+        in match {
+          case Play => "play"
+          case Stop => "stop"
+          case Pause => "pause"
+        }
+      )
+    }
   }
 
   trait Audio {
     val sampleRate: Int
     val bits: Int
-    val channeld: Int
+    val channels: Int
   }
 
   object Audio {
-    private case class AudioImpl(sampleRate: Int, bits: Int, channeld: Int) extends Audio
+    private case class AudioImpl(sampleRate: Int, bits: Int, channels: Int) extends Audio
 
     def apply(s: String): Audio = {
       val split = s.split(":")
       AudioImpl(split(0).toInt, split(1).toInt, split(2).toInt)
+    }
+
+    implicit object Format extends Format[Audio] {
+      override def reads(jv: JsValue): JsResult[Audio] = JsSuccess(
+        AudioImpl(
+          (jv \ "sampleRate").as[Int],
+          (jv \ "bits").as[Int],
+          (jv \ "channels").as[Int]
+        )
+      )
+
+      override def writes(in: Audio): JsValue = Json.obj(
+        "sampleRate" -> in.sampleRate,
+        "bits" -> in.bits,
+        "channels" -> in.channels
+      )
     }
   }
 
@@ -204,6 +293,26 @@ object Response {
       map("Pos").toInt,
       map("Id").toInt
     )
+
+    implicit object Format extends Format[SongInfo] {
+      override def reads(jv: JsValue): JsResult[SongInfo] = JsSuccess(
+        SongInfoImpl(
+          (jv \ "path").as[String],
+          Instant.ofEpochMilli((jv \ "lastModified").as[String].toLong),
+          (jv \ "length").as[Int],
+          (jv \ "pos").as[Int],
+          (jv \ "id").as[Int]
+        )
+      )
+
+      override def writes(in:SongInfo): JsValue = Json.obj(
+        "path" -> in.path,
+        "lastModified" -> in.lastModified.toEpochMilli,
+        "length" -> in.length,
+        "pos" -> in.pos,
+        "id" -> in.id
+      )
+    }
   }
 
   def batchResult(in: BufferedReader): Unit = in.readLine match {
