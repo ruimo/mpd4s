@@ -4,7 +4,7 @@ import java.net.InetAddress
 import java.net.Socket
 
 trait Connection {
-  def clearError(): Response.ClearError
-  def stop(): Response.Stop
+  def clearError(): Unit
+  def stop(): Unit
   def lsInfo(path: Option[String]): Response.LsInfo
 }

@@ -9,12 +9,6 @@ import scala.util.control.TailCalls._
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-sealed trait FinalResponse
-
-trait Response {
-  def finalResponse: FinalResponse
-}
-
 sealed trait LsInfoEntry {
   val path: String
   val lastModified: Instant
@@ -32,17 +26,19 @@ object Response {
   val OkPattern = "OK".r
   val FailPattern = """ACK \[([0-9]+)@(.*)\] \{(.*)\} (.*)""".r
 
-  case object Ok extends FinalResponse
-  case class Fail(errorNo: Int, commandIdx: Int, command: String, message: String) extends FinalResponse
+  class ResponseException(
+    val errorNo: Int,
+    val commandIdx: Int,
+    val command: String,
+    val message: String
+  ) extends Exception
 
-  trait ClearError extends Response
-  trait Stop extends Response
-  trait Clear extends Response
-  trait Add extends Response
-  trait LsInfo extends Response {
+  class InternalException(msg: String = null, cause: Throwable = null) extends Exception(msg, cause)
+
+  trait LsInfo {
     val info: imm.Seq[LsInfoEntry]
   }
-  trait Play extends Response
+
   object LsInfo {
     val PlayListPattern = """playlist: (.*)""".r
     val FilePattern = """file: (.*)""".r
@@ -51,69 +47,64 @@ object Response {
     val LastModifiedPattern = """Last-Modified: (.*)""".r
   }
 
-  private class ResponseBase(val finalResponse: FinalResponse)
-
-  private class ClearErrorImpl(finalResponse: FinalResponse) extends ResponseBase(finalResponse) with ClearError
-  private class StopImpl(finalResponse: FinalResponse) extends ResponseBase(finalResponse) with Stop
-  private class ClearImpl(finalResponse: FinalResponse) extends ResponseBase(finalResponse) with Clear
-  private class AddImpl(finalResponse: FinalResponse) extends ResponseBase(finalResponse) with Add
-  private class PlayImpl(finalResponse: FinalResponse) extends ResponseBase(finalResponse) with Play
   private class LsInfoImpl(
-    finalResponse: FinalResponse,
     val info: imm.Seq[LsInfoEntry]
-  ) extends ResponseBase(finalResponse) with LsInfo
-
-  def clearError(in: BufferedReader): ClearError = in.readLine match {
+  ) extends LsInfo
+  
+  def batchResult(in: BufferedReader): Unit = in.readLine match {
     case FailPattern(errorNo, commandIdx, command, message) =>
-      new ClearErrorImpl(Fail(errorNo.toInt, commandIdx.toInt, command, message))
+      throw new ResponseException(errorNo.toInt, commandIdx.toInt, command, message)
     case OkPattern() =>
-      new ClearErrorImpl(Ok)
     case _ @ l =>
-      throw new IllegalArgumentException("Invalid response '" + l + "'")
+      throw new InternalException("Invalid response '" + l + "'")
   }
 
-  def stop(in: BufferedReader): Stop = in.readLine match {
+  def clearError(in: BufferedReader): Unit = in.readLine match {
     case FailPattern(errorNo, commandIdx, command, message) =>
-      new StopImpl(Fail(errorNo.toInt, commandIdx.toInt, command, message))
+      throw new ResponseException(errorNo.toInt, commandIdx.toInt, command, message)
     case OkPattern() =>
-      new StopImpl(Ok)
     case _ @ l =>
-      throw new IllegalArgumentException("Invalid response '" + l + "'")
+      throw new InternalException("Invalid response '" + l + "'")
   }
 
-  def add(in: BufferedReader): Add = in.readLine match {
+  def stop(in: BufferedReader): Unit = in.readLine match {
     case FailPattern(errorNo, commandIdx, command, message) =>
-      new AddImpl(Fail(errorNo.toInt, commandIdx.toInt, command, message))
+      throw new ResponseException(errorNo.toInt, commandIdx.toInt, command, message)
     case OkPattern() =>
-      new AddImpl(Ok)
     case _ @ l =>
-      throw new IllegalArgumentException("Invalid response '" + l + "'")
+      throw new InternalException("Invalid response '" + l + "'")
   }
 
-  def play(in: BufferedReader): Play = in.readLine match {
+  def add(in: BufferedReader): Unit = in.readLine match {
     case FailPattern(errorNo, commandIdx, command, message) =>
-      new PlayImpl(Fail(errorNo.toInt, commandIdx.toInt, command, message))
+      throw new ResponseException(errorNo.toInt, commandIdx.toInt, command, message)
     case OkPattern() =>
-      new PlayImpl(Ok)
     case _ @ l =>
-      throw new IllegalArgumentException("Invalid response '" + l + "'")
+      throw new InternalError(new IllegalArgumentException("Invalid response '" + l + "'"))
   }
 
-  def clear(in: BufferedReader): Clear = in.readLine match {
+  def play(in: BufferedReader): Unit = in.readLine match {
     case FailPattern(errorNo, commandIdx, command, message) =>
-      new ClearImpl(Fail(errorNo.toInt, commandIdx.toInt, command, message))
+      throw new ResponseException(errorNo.toInt, commandIdx.toInt, command, message)
     case OkPattern() =>
-      new ClearImpl(Ok)
     case _ @ l =>
-      throw new IllegalArgumentException("Invalid response '" + l + "'")
+      throw new InternalError(new IllegalArgumentException("Invalid response '" + l + "'"))
+  }
+
+  def clear(in: BufferedReader): Unit = in.readLine match {
+    case FailPattern(errorNo, commandIdx, command, message) =>
+      throw new ResponseException(errorNo.toInt, commandIdx.toInt, command, message)
+    case OkPattern() =>
+    case _ @ l =>
+      throw new InternalError(new IllegalArgumentException("Invalid response '" + l + "'"))
   }
 
   def lsInfo(in: BufferedReader): LsInfo = {
     def init(info: imm.Seq[LsInfoEntry] = imm.Seq()): TailRec[LsInfo] = in.readLine match {
       case FailPattern(errorNo, commandIdx, command, message) =>
-        done(new LsInfoImpl(Fail(errorNo.toInt, commandIdx.toInt, command, message), info))
+        throw new ResponseException(errorNo.toInt, commandIdx.toInt, command, message)
       case OkPattern() =>
-        done(new LsInfoImpl(Ok, info))
+        done(new LsInfoImpl(info))
       case LsInfo.PlayListPattern(path) =>
         tailcall(playList(info, path))
       case LsInfo.FilePattern(path) =>
@@ -130,10 +121,10 @@ object Response {
         tailcall(init(info :+ LsInfoEntry.PlayList(path, Instant.parse(time))))
       case FailPattern(errorNo, commandIdx, command, message) =>
         logger.warn("Play list is truncated path = '" + path + "'")
-        done(new LsInfoImpl(Fail(errorNo.toInt, commandIdx.toInt, command, message), info))
+        throw new ResponseException(errorNo.toInt, commandIdx.toInt, command, message)
       case OkPattern() =>
         logger.warn("Play list is truncated path = '" + path + "'")
-        done(new LsInfoImpl(Ok, info))
+        done(new LsInfoImpl(info))
       case _ @ l=>
         logger.warn("Unknown lsinfo entry '" + l + "'")
         tailcall(init(info))
@@ -155,10 +146,10 @@ object Response {
           tailcall(file(info, path, lastModified, Some(length.toInt)))
       case FailPattern(errorNo, commandIdx, command, message) =>
         logger.warn("File is truncated path = '" + path + "'")
-        done(new LsInfoImpl(Fail(errorNo.toInt, commandIdx.toInt, command, message), info))
+        throw new ResponseException(errorNo.toInt, commandIdx.toInt, command, message)
       case OkPattern() =>
         logger.warn("File is truncated path = '" + path + "'")
-        done(new LsInfoImpl(Ok, info))
+        done(new LsInfoImpl(info))
       case _ @ l=>
         logger.warn("Unknown lsinfo entry '" + l + "'")
         tailcall(init(info))
@@ -169,10 +160,10 @@ object Response {
         tailcall(init(info :+ LsInfoEntry.Directory(path, Instant.parse(time))))
       case FailPattern(errorNo, commandIdx, command, message) =>
         logger.warn("Play list is truncated path = '" + path + "'")
-        done(new LsInfoImpl(Fail(errorNo.toInt, commandIdx.toInt, command, message), info))
+        throw new ResponseException(errorNo.toInt, commandIdx.toInt, command, message)
       case OkPattern() =>
         logger.warn("Play list is truncated path = '" + path + "'")
-        done(new LsInfoImpl(Ok, info))
+        done(new LsInfoImpl(info))
       case _ @ l =>
         logger.warn("Unknown lsinfo entry '" + l + "'")
         tailcall(init(info))

@@ -15,6 +15,18 @@ class Mpc(socketFactory: () => Socket) {
     val conn = new ConnectionImpl(version(in), in, new BufferedWriter(new OutputStreamWriter(socket.getOutputStream, "utf-8")))
     f(conn)
   }.get
+
+  def withBatchConnection(f: BatchConnection => Unit): Unit = using(socketFactory()) { socket =>
+    val in = new BufferedReader(new InputStreamReader(socket.getInputStream, "utf-8"))
+    val out = new BufferedWriter(new OutputStreamWriter(socket.getOutputStream, "utf-8"))
+    out.write("command_list_begin")
+    out.write('\n')
+    val conn = new BatchConnectionImpl(version(in), in, out)
+    f(conn)
+    out.write("command_list_end")
+    out.write('\n')
+    Response.batchResult(in)
+  }.get
 }
 
 object Mpc {
@@ -33,17 +45,17 @@ object Mpc {
     val in: BufferedReader,
     val out: BufferedWriter
   ) extends Connection {
-    def clearError(): Response.ClearError = {
+    def clearError(): Unit = {
       Request.clearError.writeln(out)
       Response.clearError(in)
     }
 
-    def stop(): Response.Stop = {
+    def stop(): Unit = {
       Request.stop.writeln(out)
       Response.stop(in)
     }
 
-    def clear(): Response.Clear = {
+    def clear(): Unit = {
       Request.clear.writeln(out)
       Response.clear(in)
     }
@@ -53,14 +65,30 @@ object Mpc {
       Response.lsInfo(in)
     }
 
-    def add(path: String): Response.Add = {
+    def add(path: String): Unit = {
       Request.add(path).writeln(out)
       Response.add(in)
     }
 
-    def play(idx: Option[Int]): Response.Play = {
+    def play(idx: Option[Int]): Unit = {
       Request.play(idx).writeln(out)
       Response.play(in)
+    }
+  }
+
+  private class BatchConnectionImpl(
+    val version: Version,
+    val in: BufferedReader,
+    val out: BufferedWriter
+  ) extends BatchConnection {
+    def clearError(): BatchConnection = {
+      Request.clearError.writeln(out)
+      this
+    }
+
+    def stop(): BatchConnection = {
+      Request.stop.writeln(out)
+      this
     }
   }
 }
