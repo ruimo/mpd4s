@@ -23,6 +23,7 @@ class Mpc(socketFactory: () => Socket) {
     val conn = new BatchConnectionImpl(version(in), in, out)
     f(conn)
     out.write("command_list_end\n")
+    out.flush()
     Response.batchResult(in)
   }.get
 }
