@@ -19,12 +19,10 @@ class Mpc(socketFactory: () => Socket) {
   def withBatchConnection(f: BatchConnection => Unit): Unit = using(socketFactory()) { socket =>
     val in = new BufferedReader(new InputStreamReader(socket.getInputStream, "utf-8"))
     val out = new BufferedWriter(new OutputStreamWriter(socket.getOutputStream, "utf-8"))
-    out.write("command_list_begin")
-    out.write('\n')
+    out.write("command_list_begin\n")
     val conn = new BatchConnectionImpl(version(in), in, out)
     f(conn)
-    out.write("command_list_end")
-    out.write('\n')
+    out.write("command_list_end\n")
     Response.batchResult(in)
   }.get
 }
