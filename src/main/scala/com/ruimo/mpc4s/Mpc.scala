@@ -89,17 +89,17 @@ object Mpc {
       this
     }
 
-    def clear(): Unit = {
+    def clear(): BatchConnection = {
       Request.clear.writeln(out)
       this
     }
 
-    def add(path: String): Unit = {
+    def add(path: String): BatchConnection = {
       Request.add(path).writeln(out)
       this
     }
 
-    def play(idx: Option[Int]): Unit = {
+    def play(idx: Option[Int]): BatchConnection = {
       Request.play(idx).writeln(out)
       this
     }
