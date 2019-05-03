@@ -29,6 +29,8 @@ object Request {
   object clearError extends Command("clearerror")
   object stop extends Command("stop")
   object clear extends Command("clear")
+  object status extends Command("status")
+  object currentSong extends Command("currentsong")
 
   class LsInfo(path: Option[String]) extends Command("lsinfo") {
     override def args = path.toList

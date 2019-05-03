@@ -9,17 +9,6 @@ import scala.util.control.TailCalls._
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-sealed trait LsInfoEntry {
-  val path: String
-  val lastModified: Instant
-}
-
-object LsInfoEntry {
-  case class Directory(path: String, lastModified: Instant) extends LsInfoEntry
-  case class File(path: String, lastModified: Instant, length: Int) extends LsInfoEntry
-  case class PlayList(path: String, lastModified: Instant) extends LsInfoEntry
-}
-
 object Response {
   val logger = LoggerFactory.getLogger(getClass)
 
@@ -35,8 +24,148 @@ object Response {
 
   class InternalException(msg: String = null, cause: Throwable = null) extends Exception(msg, cause)
 
+  sealed trait LsInfoEntry {
+    val path: String
+    val lastModified: Instant
+  }
+
+  object LsInfoEntry {
+    case class Directory(path: String, lastModified: Instant) extends LsInfoEntry
+    case class File(path: String, lastModified: Instant, length: Int) extends LsInfoEntry
+    case class PlayList(path: String, lastModified: Instant) extends LsInfoEntry
+  }
+
   trait LsInfo {
     val info: imm.Seq[LsInfoEntry]
+  }
+
+  class Volume private (val value: Int) extends AnyVal
+  object Volume {
+    def apply(value: Int): Volume =
+      if (value < 0 || 100 < value) throw new IllegalArgumentException("Volume(=" + value + ") should be 0 - 100")
+      else new Volume(value)
+  }
+
+  sealed trait SinglePlay
+
+  object SinglePlay {
+    case object Yes extends SinglePlay
+    case object No extends SinglePlay
+    case object OneShot extends SinglePlay
+
+    def apply(s: String): SinglePlay = s match {
+      case "0" => No
+      case "1" => Yes
+      case "oneshot" => OneShot
+      case _ => throw new IllegalArgumentException("'" + s + "' is invalid for single.")
+    }
+  }
+
+  sealed trait PlayState
+
+  object PlayState {
+    case object Play extends PlayState
+    case object Stop extends PlayState
+    case object Pause extends PlayState
+
+    def apply(s: String): PlayState = s match {
+      case "play" => Play
+      case "stop" => Stop
+      case "pause" => Pause
+      case _ => throw new IllegalArgumentException("'" + s + "' is invalid for play state.")
+    }
+  }
+
+  trait Audio {
+    val sampleRate: Int
+    val bits: Int
+    val channeld: Int
+  }
+
+  object Audio {
+    private case class AudioImpl(sampleRate: Int, bits: Int, channeld: Int) extends Audio
+
+    def apply(s: String): Audio = {
+      val split = s.split(":")
+      AudioImpl(split(0).toInt, split(1).toInt, split(2).toInt)
+    }
+  }
+
+  trait StatusInfo {
+    val volume: Option[Volume]
+    val repeat: Boolean
+    val random: Boolean
+    val single: SinglePlay
+    val consume: Boolean
+    val playList: Int
+    val playListLength: Int
+    val state: PlayState
+    val song: Int
+    val songId: Int
+    val nextSong: Option[Int]
+    val nextSongId: Option[Int]
+    val elapsed: Double
+    val duration: Option[Double]
+    val bitRate: Int
+    val xfade: Option[Double]
+    val mixRampDb: Option[Double]
+    val mixRampDelay: Option[Double]
+    val audio: Audio
+    val updatingDb: Option[Int]
+    val error: Option[String]
+  }
+
+  object StatusInfo {
+    private case class StatusInfoImpl(
+      volume: Option[Volume],
+      repeat: Boolean,
+      random: Boolean,
+      single: SinglePlay,
+      consume: Boolean,
+      playList: Int,
+      playListLength: Int,
+      state: PlayState,
+      song: Int,
+      songId: Int,
+      nextSong: Option[Int],
+      nextSongId: Option[Int],
+      elapsed: Double,
+      duration: Option[Double],
+      bitRate: Int,
+      xfade: Option[Double],
+      mixRampDb: Option[Double],
+      mixRampDelay: Option[Double],
+      audio: Audio,
+      updatingDb: Option[Int],
+      error: Option[String]
+    ) extends StatusInfo
+
+    def apply(in: imm.Map[String, String]): StatusInfo = StatusInfoImpl(
+      volume = in("volume").toInt match {
+        case -1 => None
+        case value => Some(Volume(value))
+      },
+      repeat = in("repeat") == "1",
+      random = in("random") == "1",
+      single = SinglePlay(in("single")),
+      consume = in("consume") == "1",
+      playList = in("playlist").toInt,
+      playListLength = in("playlistlength").toInt,
+      state = PlayState(in("state")),
+      song = in("song").toInt,
+      songId = in("songid").toInt,
+      nextSong = in.get("nextsong").map(_.toInt),
+      nextSongId = in.get("nextsongid").map(_.toInt),
+      elapsed = in("elapsed").toDouble,
+      duration = in.get("duration").map(_.toDouble),
+      bitRate = in("bitrate").toInt,
+      xfade = in.get("xfade").map(_.toDouble),
+      mixRampDb = in.get("maxrampdb").map(_.toDouble),
+      mixRampDelay = in.get("maxrampdelay").map(_.toDouble),
+      audio = Audio(in("audio")),
+      updatingDb = in.get("updatingdb").map(_.toInt),
+      error = in.get("error")
+    )
   }
 
   object LsInfo {
@@ -51,6 +180,32 @@ object Response {
     val info: imm.Seq[LsInfoEntry]
   ) extends LsInfo
   
+  trait SongInfo {
+    val path: String
+    val lastModified: Instant
+    val length: Int
+    val pos: Int
+    val id: Int
+  }
+
+  object SongInfo {
+    private case class SongInfoImpl(
+      path: String,
+      lastModified: Instant,
+      length: Int,
+      pos: Int,
+      id: Int
+    ) extends SongInfo
+
+    def apply(map: imm.Map[String, String]): SongInfo = SongInfoImpl(
+      map("file"),
+      Instant.parse(map("Last-Modified")),
+      map("Time").toInt,
+      map("Pos").toInt,
+      map("Id").toInt
+    )
+  }
+
   def batchResult(in: BufferedReader): Unit = in.readLine match {
     case FailPattern(errorNo, commandIdx, command, message) =>
       throw new ResponseException(errorNo.toInt, commandIdx.toInt, command, message)
@@ -170,5 +325,43 @@ object Response {
     }
 
     init().result
+  }
+
+  def status(in: BufferedReader): StatusInfo = {
+    @tailrec def parse(map: imm.Map[String, String]): StatusInfo = in.readLine match {
+      case FailPattern(errorNo, commandIdx, command, message) =>
+        throw new ResponseException(errorNo.toInt, commandIdx.toInt, command, message)
+      case OkPattern() =>
+        StatusInfo(map)
+      case _ @ l =>
+        val idx = l.indexOf(':')
+        if (idx == -1) throw new InternalError(new IllegalArgumentException("Invalid response '" + l + "'"))
+        else {
+          val key = l.substring(0, idx)
+          val value = l.substring(idx + 1).trim
+          parse(map.updated(key, value))
+        }
+    }
+
+    parse(imm.Map())
+  }
+
+  def currentSong(in: BufferedReader): SongInfo = {
+    @tailrec def parse(map: imm.Map[String, String]): SongInfo = in.readLine match {
+      case FailPattern(errorNo, commandIdx, command, message) =>
+        throw new ResponseException(errorNo.toInt, commandIdx.toInt, command, message)
+      case OkPattern() =>
+        SongInfo(map)
+      case _ @ l =>
+        val idx = l.indexOf(':')
+        if (idx == -1) throw new InternalError(new IllegalArgumentException("Invalid response '" + l + "'"))
+        else {
+          val key = l.substring(0, idx)
+          val value = l.substring(idx + 1).trim
+          parse(map.updated(key, value))
+        }
+    }
+
+    parse(imm.Map())
   }
 }

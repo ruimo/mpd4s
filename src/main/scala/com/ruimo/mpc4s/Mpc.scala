@@ -73,6 +73,16 @@ object Mpc {
       Request.play(idx).writeln(out)
       Response.play(in)
     }
+
+    def status(): Response.StatusInfo = {
+      Request.status.writeln(out)
+      Response.status(in)
+    }
+
+    def currentSong(): Response.SongInfo = {
+      Request.currentSong.writeln(out)
+      Response.currentSong(in)
+    }
   }
 
   private class BatchConnectionImpl(
