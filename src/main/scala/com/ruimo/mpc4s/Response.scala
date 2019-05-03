@@ -363,6 +363,14 @@ object Response {
       throw new InternalError(new IllegalArgumentException("Invalid response '" + l + "'"))
   }
 
+  def pause(in: BufferedReader): Unit = in.readLine match {
+    case FailPattern(errorNo, commandIdx, command, message) =>
+      throw new ResponseException(errorNo.toInt, commandIdx.toInt, command, message)
+    case OkPattern() =>
+    case _ @ l =>
+      throw new InternalError(new IllegalArgumentException("Invalid response '" + l + "'"))
+  }
+
   def lsInfo(in: BufferedReader): LsInfo = {
     def init(info: imm.Seq[LsInfoEntry] = imm.Seq()): TailRec[LsInfo] = in.readLine match {
       case FailPattern(errorNo, commandIdx, command, message) =>

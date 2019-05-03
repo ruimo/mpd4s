@@ -9,4 +9,5 @@ trait BatchConnection {
   def clear(): BatchConnection
   def add(path: String): BatchConnection
   def play(idx: Option[Int]): BatchConnection
+  def pause(): BatchConnection
 }

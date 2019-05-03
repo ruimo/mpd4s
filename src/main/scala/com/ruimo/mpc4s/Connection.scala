@@ -12,4 +12,5 @@ trait Connection {
   def play(idx: Option[Int]): Unit
   def status(): Response.StatusInfo
   def currentSong(): Option[Response.SongInfo]
+  def pause(): Unit
 }

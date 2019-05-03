@@ -47,4 +47,5 @@ object Request {
   def lsInfo(path: Option[String]): Request = new LsInfo(path)
   def add(path: String): Request = new Add(path)
   def play(idx: Option[Int]): Request = new Play(idx)
+  object pause extends Command("pause")
 }

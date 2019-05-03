@@ -83,6 +83,11 @@ object Mpc {
       Request.currentSong.writeln(out)
       Response.currentSong(in)
     }
+
+    def pause(): Unit = {
+      Request.pause.writeln(out)
+      Response.pause(in)
+    }
   }
 
   private class BatchConnectionImpl(
@@ -112,6 +117,11 @@ object Mpc {
 
     def play(idx: Option[Int]): BatchConnection = {
       Request.play(idx).writeln(out)
+      this
+    }
+  
+    def pause(): BatchConnection = {
+      Request.pause.writeln(out)
       this
     }
   }
