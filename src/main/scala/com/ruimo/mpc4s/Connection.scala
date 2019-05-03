@@ -8,5 +8,5 @@ trait Connection {
   def stop(): Unit
   def lsInfo(path: Option[String]): Response.LsInfo
   def status(): Response.StatusInfo
-  def currentSong(): Response.SongInfo
+  def currentSong(): Option[Response.SongInfo]
 }

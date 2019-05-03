@@ -189,17 +189,17 @@ object Response {
     val playList: Int
     val playListLength: Int
     val state: PlayState
-    val song: Int
-    val songId: Int
+    val song: Option[Int]
+    val songId: Option[Int]
     val nextSong: Option[Int]
     val nextSongId: Option[Int]
-    val elapsed: Double
+    val elapsed: Option[Double]
     val duration: Option[Double]
-    val bitRate: Int
+    val bitRate: Option[Int]
     val xfade: Option[Double]
     val mixRampDb: Option[Double]
     val mixRampDelay: Option[Double]
-    val audio: Audio
+    val audio: Option[Audio]
     val updatingDb: Option[Int]
     val error: Option[String]
   }
@@ -214,17 +214,17 @@ object Response {
       playList: Int,
       playListLength: Int,
       state: PlayState,
-      song: Int,
-      songId: Int,
+      song: Option[Int],
+      songId: Option[Int],
       nextSong: Option[Int],
       nextSongId: Option[Int],
-      elapsed: Double,
+      elapsed: Option[Double],
       duration: Option[Double],
-      bitRate: Int,
+      bitRate: Option[Int],
       xfade: Option[Double],
       mixRampDb: Option[Double],
       mixRampDelay: Option[Double],
-      audio: Audio,
+      audio: Option[Audio],
       updatingDb: Option[Int],
       error: Option[String]
     ) extends StatusInfo
@@ -241,17 +241,17 @@ object Response {
       playList = in("playlist").toInt,
       playListLength = in("playlistlength").toInt,
       state = PlayState(in("state")),
-      song = in("song").toInt,
-      songId = in("songid").toInt,
+      song = in.get("song").map(_.toInt),
+      songId = in.get("songid").map(_.toInt),
       nextSong = in.get("nextsong").map(_.toInt),
       nextSongId = in.get("nextsongid").map(_.toInt),
-      elapsed = in("elapsed").toDouble,
+      elapsed = in.get("elapsed").map(_.toDouble),
       duration = in.get("duration").map(_.toDouble),
-      bitRate = in("bitrate").toInt,
+      bitRate = in.get("bitrate").map(_.toInt),
       xfade = in.get("xfade").map(_.toDouble),
       mixRampDb = in.get("maxrampdb").map(_.toDouble),
       mixRampDelay = in.get("maxrampdelay").map(_.toDouble),
-      audio = Audio(in("audio")),
+      audio = in.get("audio").map(Audio.apply),
       updatingDb = in.get("updatingdb").map(_.toInt),
       error = in.get("error")
     )
@@ -455,12 +455,12 @@ object Response {
     parse(imm.Map())
   }
 
-  def currentSong(in: BufferedReader): SongInfo = {
-    @tailrec def parse(map: imm.Map[String, String]): SongInfo = in.readLine match {
+  def currentSong(in: BufferedReader): Option[SongInfo] = {
+    @tailrec def parse(map: imm.Map[String, String]): Option[SongInfo] = in.readLine match {
       case FailPattern(errorNo, commandIdx, command, message) =>
         throw new ResponseException(errorNo.toInt, commandIdx.toInt, command, message)
       case OkPattern() =>
-        SongInfo(map)
+        if (map.isEmpty) None else Some(SongInfo(map))
       case _ @ l =>
         val idx = l.indexOf(':')
         if (idx == -1) throw new InternalError(new IllegalArgumentException("Invalid response '" + l + "'"))

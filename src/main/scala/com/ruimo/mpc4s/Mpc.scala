@@ -79,7 +79,7 @@ object Mpc {
       Response.status(in)
     }
 
-    def currentSong(): Response.SongInfo = {
+    def currentSong(): Option[Response.SongInfo] = {
       Request.currentSong.writeln(out)
       Response.currentSong(in)
     }
