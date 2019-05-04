@@ -16,6 +16,12 @@ object Response {
   val OkPattern = "OK".r
   val FailPattern = """ACK \[([0-9]+)@(.*)\] \{(.*)\} (.*)""".r
 
+  def split(l: String): (String, String) = {
+    val idx = l.indexOf(':')
+    if (idx == -1) throw new IllegalArgumentException("No ':' found in '" + l + "'")
+    (l.substring(0, idx), l.substring(idx + 1).trim)
+  }
+
   class ResponseException(
     val errorNo: Int,
     val commandIdx: Int,
@@ -76,7 +82,7 @@ object Response {
   }
 
   trait LsInfo {
-    val info: imm.Seq[LsInfoEntry]
+    val entries: imm.Seq[LsInfoEntry]
   }
 
   class Volume private (val value: Int) extends AnyVal
@@ -249,8 +255,8 @@ object Response {
       duration = in.get("duration").map(_.toDouble),
       bitRate = in.get("bitrate").map(_.toInt),
       xfade = in.get("xfade").map(_.toDouble),
-      mixRampDb = in.get("maxrampdb").map(_.toDouble),
-      mixRampDelay = in.get("maxrampdelay").map(_.toDouble),
+      mixRampDb = in.get("mixrampdb").map(_.toDouble),
+      mixRampDelay = in.get("mixrampdelay").map(_.toDouble),
       audio = in.get("audio").map(Audio.apply),
       updatingDb = in.get("updatingdb").map(_.toInt),
       error = in.get("error")
@@ -266,9 +272,36 @@ object Response {
   }
 
   private class LsInfoImpl(
-    val info: imm.Seq[LsInfoEntry]
+    val entries: imm.Seq[LsInfoEntry]
   ) extends LsInfo
   
+  trait PlayListInfoEntry {
+    val path: String
+    val lastModified: Instant
+    val length: Int
+    val pos: Int
+    val id: Int
+  }
+
+  private case class PlayListInfoEntryImpl(
+    path: String, lastModified: Instant, length: Int, pos: Int, id: Int
+  ) extends PlayListInfoEntry
+
+  private object PlayListInfoEntryImpl {
+    def apply(fields: Map[String, String]): PlayListInfoEntryImpl = PlayListInfoEntryImpl(
+      fields("file"), Instant.parse(fields("Last-Modified")),
+      fields("Time").toInt, fields("Pos").toInt, fields("Id").toInt
+    )
+  }
+
+  trait PlayListInfo {
+    val entries: imm.Seq[PlayListInfoEntry]
+  }
+
+  private case class PlayListInfoImpl(
+    entries: imm.Seq[PlayListInfoEntry]
+  ) extends PlayListInfo
+
   trait SongInfo {
     val path: String
     val lastModified: Instant
@@ -480,5 +513,36 @@ object Response {
     }
 
     parse(imm.Map())
+  }
+
+  def playListInfo(in: BufferedReader): PlayListInfo = {
+    def init(
+      entries: imm.Seq[PlayListInfoEntry] = imm.Seq()
+    ): TailRec[PlayListInfo] = in.readLine match {
+      case FailPattern(errorNo, commandIdx, command, message) =>
+        throw new ResponseException(errorNo.toInt, commandIdx.toInt, command, message)
+      case OkPattern() =>
+        done(PlayListInfoImpl(entries))
+      case l =>
+        val (key, value) = split(l)
+        tailcall(start(entries, Map(key -> value)))
+    }
+
+    def start(
+      entries: imm.Seq[PlayListInfoEntry], fields: Map[String, String]
+    ): TailRec[PlayListInfo] = in.readLine match {
+      case FailPattern(errorNo, commandIdx, command, message) =>
+        throw new ResponseException(errorNo.toInt, commandIdx.toInt, command, message)
+      case OkPattern() =>
+        done(PlayListInfoImpl(entries :+ PlayListInfoEntryImpl(fields)))
+      case l =>
+        val (key, value) = split(l)
+        if (key == "file")
+          tailcall(start(entries :+ PlayListInfoEntryImpl(fields), Map(key -> value)))
+        else
+          tailcall(start(entries, fields.updated(key, value)))
+    }
+
+    init().result
   }
 }

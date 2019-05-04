@@ -4,6 +4,8 @@ import java.net.InetAddress
 import java.net.Socket
 
 trait BatchConnection {
+  val version: Version
+
   def clearError(): BatchConnection
   def stop(): BatchConnection
   def clear(): BatchConnection

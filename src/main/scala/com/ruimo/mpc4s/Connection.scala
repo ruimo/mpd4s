@@ -4,6 +4,8 @@ import java.net.InetAddress
 import java.net.Socket
 
 trait Connection {
+  val version: Version
+
   def clearError(): Unit
   def stop(): Unit
   def clear(): Unit
@@ -13,4 +15,5 @@ trait Connection {
   def status(): Response.StatusInfo
   def currentSong(): Option[Response.SongInfo]
   def pause(): Unit
+  def playListInfo(): Response.PlayListInfo
 }

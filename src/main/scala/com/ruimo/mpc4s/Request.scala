@@ -48,4 +48,5 @@ object Request {
   def add(path: String): Request = new Add(path)
   def play(idx: Option[Int]): Request = new Play(idx)
   object pause extends Command("pause")
+  object playListInfo extends Command("playlistinfo")
 }

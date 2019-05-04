@@ -44,49 +44,54 @@ object Mpc {
     val in: BufferedReader,
     val out: BufferedWriter
   ) extends Connection {
-    def clearError(): Unit = {
+    override def clearError(): Unit = {
       Request.clearError.writeln(out)
       Response.clearError(in)
     }
 
-    def stop(): Unit = {
+    override def stop(): Unit = {
       Request.stop.writeln(out)
       Response.stop(in)
     }
 
-    def clear(): Unit = {
+    override def clear(): Unit = {
       Request.clear.writeln(out)
       Response.clear(in)
     }
 
-    def lsInfo(path: Option[String]): Response.LsInfo = {
+    override def lsInfo(path: Option[String]): Response.LsInfo = {
       Request.lsInfo(path).writeln(out)
       Response.lsInfo(in)
     }
 
-    def add(path: String): Unit = {
+    override def add(path: String): Unit = {
       Request.add(path).writeln(out)
       Response.add(in)
     }
 
-    def play(idx: Option[Int]): Unit = {
+    override def play(idx: Option[Int]): Unit = {
       Request.play(idx).writeln(out)
       Response.play(in)
     }
 
-    def status(): Response.StatusInfo = {
+    override def status(): Response.StatusInfo = {
       Request.status.writeln(out)
       Response.status(in)
     }
 
-    def currentSong(): Option[Response.SongInfo] = {
+    override def currentSong(): Option[Response.SongInfo] = {
       Request.currentSong.writeln(out)
       Response.currentSong(in)
     }
 
-    def pause(): Unit = {
+    override def pause(): Unit = {
       Request.pause.writeln(out)
       Response.pause(in)
+    }
+
+    override def playListInfo(): Response.PlayListInfo = {
+      Request.playListInfo.writeln(out)
+      Response.playListInfo(in)
     }
   }
 
@@ -95,32 +100,32 @@ object Mpc {
     val in: BufferedReader,
     val out: BufferedWriter
   ) extends BatchConnection {
-    def clearError(): BatchConnection = {
+    override def clearError(): BatchConnection = {
       Request.clearError.writeln(out)
       this
     }
 
-    def stop(): BatchConnection = {
+    override def stop(): BatchConnection = {
       Request.stop.writeln(out)
       this
     }
 
-    def clear(): BatchConnection = {
+    override def clear(): BatchConnection = {
       Request.clear.writeln(out)
       this
     }
 
-    def add(path: String): BatchConnection = {
+    override def add(path: String): BatchConnection = {
       Request.add(path).writeln(out)
       this
     }
 
-    def play(idx: Option[Int]): BatchConnection = {
+    override def play(idx: Option[Int]): BatchConnection = {
       Request.play(idx).writeln(out)
       this
     }
   
-    def pause(): BatchConnection = {
+    override def pause(): BatchConnection = {
       Request.pause.writeln(out)
       this
     }
