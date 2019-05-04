@@ -283,6 +283,28 @@ object Response {
     val id: Int
   }
 
+  object PlayListInfoEntry {
+    implicit object Format extends Format[PlayListInfoEntry] {
+      override def reads(jv: JsValue): JsResult[PlayListInfoEntry] = JsSuccess(
+        PlayListInfoEntryImpl(
+          (jv \ "path").as[String],
+          Instant.ofEpochMilli((jv \ "lastModified").as[String].toLong),
+          (jv \ "length").as[Int],
+          (jv \ "pos").as[Int],
+          (jv \ "id").as[Int]
+        )
+      )
+
+      override def writes(in: PlayListInfoEntry): JsValue = Json.obj(
+        "path" -> in.path,
+        "lastModified" -> in.lastModified.toEpochMilli.toString,
+        "length" -> in.length,
+        "pos" -> in.pos,
+        "id" -> in.id
+      )
+    }
+  }
+
   private case class PlayListInfoEntryImpl(
     path: String, lastModified: Instant, length: Int, pos: Int, id: Int
   ) extends PlayListInfoEntry
