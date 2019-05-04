@@ -320,6 +320,20 @@ object Response {
     val entries: imm.Seq[PlayListInfoEntry]
   }
 
+  object PlayListInfo {
+    implicit object Format extends Format[PlayListInfo] {
+      override def reads(jv: JsValue): JsResult[PlayListInfo] = JsSuccess(
+        PlayListInfoImpl(
+          (jv \ "entries").as[Seq[PlayListInfoEntry]].toList
+        )
+      )
+
+      override def writes(in: PlayListInfo): JsValue = Json.obj(
+        "entries" -> in.entries
+      )
+    }
+  }
+
   private case class PlayListInfoImpl(
     entries: imm.Seq[PlayListInfoEntry]
   ) extends PlayListInfo
