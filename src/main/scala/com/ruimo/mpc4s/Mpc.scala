@@ -162,6 +162,11 @@ object Mpc {
       Request.load(name, range).writeln(out)
       Response.load(in)
     }
+
+    override def deleteId(id: Int): Unit = {
+      Request.deleteId(id).writeln(out)
+      Response.deleteId(in)
+    }
   }
 
   private class BatchConnectionImpl(
@@ -201,6 +206,11 @@ object Mpc {
 
     override def load(name: String, range: Option[(Int, Int)] = None): BatchConnection = {
       Request.load(name, range)
+      this
+    }
+
+    override def deleteId(id: Int): BatchConnection = {
+      Request.deleteId(id)
       this
     }
   }

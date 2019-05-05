@@ -13,4 +13,5 @@ trait BatchConnection {
   def play(idx: Option[Int]): BatchConnection
   def pause(): BatchConnection
   def load(name: String, range: Option[(Int, Int)] = None): BatchConnection
+  def deleteId(id: Int): BatchConnection
 }

@@ -18,4 +18,5 @@ trait Connection {
   def playlistInfo(): Response.PlaylistInfo
   def listPlaylists(): Response.StoredPlaylistInfo
   def load(name: String, range: Option[(Int, Int)] = None): Unit
+  def deleteId(id: Int): Unit
 }

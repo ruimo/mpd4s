@@ -54,4 +54,8 @@ object Request {
     override val args = imm.Seq(name) ++ range.map { case (from, to) => from + ":" + to }
   }
   def load(name: String, range: Option[(Int, Int)]): Request = new Load(name, range)
+  class DeleteId(id: Int) extends Command("deleteid") {
+    override val args = imm.Seq(id.toString)
+  }
+  def deleteId(id: Int): Request = new DeleteId(id)
 }
