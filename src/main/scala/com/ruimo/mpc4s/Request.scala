@@ -51,7 +51,7 @@ object Request {
   object playlistInfo extends Command("playlistinfo")
   object listPlaylists extends Command("listplaylists")
   class Load(name: String, range: Option[(Int, Int)]) extends Command("load") {
-    override val args = imm.Seq(name) ++ range.map { case (from, to) => " " + from + ":" + to }
+    override val args = imm.Seq(name) ++ range.map { case (from, to) => from + ":" + to }
   }
-  def load(name: String, range: Option[(Int, Int)]) = new Load(name, range)
+  def load(name: String, range: Option[(Int, Int)]): Request = new Load(name, range)
 }
