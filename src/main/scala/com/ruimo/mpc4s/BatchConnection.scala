@@ -12,5 +12,5 @@ trait BatchConnection {
   def add(path: String): BatchConnection
   def play(idx: Option[Int]): BatchConnection
   def pause(): BatchConnection
-  def load(name: String, range: Option[(Int, Int)]): BatchConnection
+  def load(name: String, range: Option[(Int, Int)] = None): BatchConnection
 }
