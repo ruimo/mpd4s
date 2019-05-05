@@ -27,7 +27,7 @@ class LsInfoSpec extends Specification {
         conn.version === Version("0.19.0")
         val entries = conn.lsInfo(Some("path0")).entries
         entries.size === 3
-        entries(0) === LsInfoEntry.PlayList("Bach/@play.m3u", Instant.parse("2012-11-24T04:23:44Z"))
+        entries(0) === LsInfoEntry.Playlist("Bach/@play.m3u", Instant.parse("2012-11-24T04:23:44Z"))
         entries(1) === LsInfoEntry.Directory("Bach/Cantata", Instant.parse("2013-06-15T02:30:30Z"))
         entries(2) === LsInfoEntry.File("incubation/Liszt-S163-12-R3.flac", Instant.parse("2018-08-18T10:13:37Z"), 299)
       }

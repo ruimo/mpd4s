@@ -15,5 +15,6 @@ trait Connection {
   def status(): Response.StatusInfo
   def currentSong(): Option[Response.SongInfo]
   def pause(): Unit
-  def playListInfo(): Response.PlayListInfo
+  def playlistInfo(): Response.PlaylistInfo
+  def listPlaylists(): Response.StoredPlaylistInfo
 }

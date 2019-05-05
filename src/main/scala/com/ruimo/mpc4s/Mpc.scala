@@ -89,9 +89,14 @@ object Mpc {
       Response.pause(in)
     }
 
-    override def playListInfo(): Response.PlayListInfo = {
-      Request.playListInfo.writeln(out)
-      Response.playListInfo(in)
+    override def playlistInfo(): Response.PlaylistInfo = {
+      Request.playlistInfo.writeln(out)
+      Response.playlistInfo(in)
+    }
+
+    override def listPlaylists(): Response.StoredPlaylistInfo = {
+      Request.listPlaylists.writeln(out)
+      Response.listPlaylists(in)
     }
   }
 

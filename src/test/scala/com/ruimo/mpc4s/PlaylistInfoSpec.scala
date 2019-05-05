@@ -7,7 +7,7 @@ import org.specs2.mutable.Specification
 import com.ruimo.mpc4s.Response._
 import scala.collection.{immutable => imm}
 
-class PlayListInfoSpec extends Specification {
+class PlaylistInfoSpec extends Specification {
   "Play list info" should {
     "Can handle ok" in {
       val in = new ByteArrayInputStream((
@@ -29,7 +29,7 @@ class PlayListInfoSpec extends Specification {
 
       new Mpc(() => socket).withConnection { conn =>
         conn.version === Version("0.19.0")
-        val pl: imm.Seq[PlayListInfoEntry] = conn.playListInfo().entries
+        val pl: imm.Seq[PlaylistInfoEntry] = conn.playlistInfo().entries
         pl.size === 2
         pl(0).id === 68
         pl(0).lastModified === Instant.parse("2012-11-24T04:16:41Z")
@@ -58,7 +58,7 @@ class PlayListInfoSpec extends Specification {
 
       new Mpc(() => socket).withConnection { conn =>
         conn.version === Version("0.19.0")
-        conn.playListInfo().entries.size === 0
+        conn.playlistInfo().entries.size === 0
       }
 
       socket.closed === true
@@ -76,7 +76,7 @@ class PlayListInfoSpec extends Specification {
       try {
         new Mpc(() => socket).withConnection { conn =>
           conn.version === Version("0.19.0")
-          conn.playListInfo()
+          conn.playlistInfo()
           failure
         }
       } catch {

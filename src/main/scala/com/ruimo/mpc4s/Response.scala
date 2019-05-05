@@ -39,7 +39,7 @@ object Response {
   object LsInfoEntry {
     case class Directory(path: String, lastModified: Instant) extends LsInfoEntry
     case class File(path: String, lastModified: Instant, length: Int) extends LsInfoEntry
-    case class PlayList(path: String, lastModified: Instant) extends LsInfoEntry
+    case class Playlist(path: String, lastModified: Instant) extends LsInfoEntry
 
     implicit object Format extends Format[LsInfoEntry] {
       override def reads(jv: JsValue): JsResult[LsInfoEntry] = JsSuccess(
@@ -53,7 +53,7 @@ object Response {
             Instant.ofEpochMilli((jv \ "lastModified").as[String].toLong),
             (jv \ "length").as[Int]
           )
-          case "playlist" => PlayList(
+          case "playlist" => Playlist(
             (jv \ "path").as[String],
             Instant.ofEpochMilli((jv \ "lastModified").as[String].toLong)
           )
@@ -72,7 +72,7 @@ object Response {
           "lastModified" -> lastModified.toEpochMilli.toString,
           "length" -> length
         )
-        case PlayList(path, lastModified) => Json.obj(
+        case Playlist(path, lastModified) => Json.obj(
           "type" -> "playlist",
           "path" -> path,
           "lastModified" -> lastModified.toEpochMilli.toString
@@ -192,8 +192,8 @@ object Response {
     val random: Boolean
     val single: SinglePlay
     val consume: Boolean
-    val playList: Int
-    val playListLength: Int
+    val playlist: Int
+    val playlistLength: Int
     val state: PlayState
     val song: Option[Int]
     val songId: Option[Int]
@@ -217,8 +217,8 @@ object Response {
       random: Boolean,
       single: SinglePlay,
       consume: Boolean,
-      playList: Int,
-      playListLength: Int,
+      playlist: Int,
+      playlistLength: Int,
       state: PlayState,
       song: Option[Int],
       songId: Option[Int],
@@ -244,8 +244,8 @@ object Response {
       random = in("random") == "1",
       single = SinglePlay(in("single")),
       consume = in("consume") == "1",
-      playList = in("playlist").toInt,
-      playListLength = in("playlistlength").toInt,
+      playlist = in("playlist").toInt,
+      playlistLength = in("playlistlength").toInt,
       state = PlayState(in("state")),
       song = in.get("song").map(_.toInt),
       songId = in.get("songid").map(_.toInt),
@@ -264,7 +264,7 @@ object Response {
   }
 
   object LsInfo {
-    val PlayListPattern = """playlist: (.*)""".r
+    val PlaylistPattern = """playlist: (.*)""".r
     val FilePattern = """file: (.*)""".r
     val DirectoryPattern = """directory: (.*)""".r
     val TimePattern = """Time: (.*)""".r
@@ -275,7 +275,7 @@ object Response {
     val entries: imm.Seq[LsInfoEntry]
   ) extends LsInfo
   
-  trait PlayListInfoEntry {
+  trait PlaylistInfoEntry {
     val path: String
     val lastModified: Instant
     val length: Int
@@ -283,10 +283,10 @@ object Response {
     val id: Int
   }
 
-  object PlayListInfoEntry {
-    implicit object Format extends Format[PlayListInfoEntry] {
-      override def reads(jv: JsValue): JsResult[PlayListInfoEntry] = JsSuccess(
-        PlayListInfoEntryImpl(
+  object PlaylistInfoEntry {
+    implicit object Format extends Format[PlaylistInfoEntry] {
+      override def reads(jv: JsValue): JsResult[PlaylistInfoEntry] = JsSuccess(
+        PlaylistInfoEntryImpl(
           (jv \ "path").as[String],
           Instant.ofEpochMilli((jv \ "lastModified").as[String].toLong),
           (jv \ "length").as[Int],
@@ -295,7 +295,7 @@ object Response {
         )
       )
 
-      override def writes(in: PlayListInfoEntry): JsValue = Json.obj(
+      override def writes(in: PlaylistInfoEntry): JsValue = Json.obj(
         "path" -> in.path,
         "lastModified" -> in.lastModified.toEpochMilli.toString,
         "length" -> in.length,
@@ -305,38 +305,38 @@ object Response {
     }
   }
 
-  private case class PlayListInfoEntryImpl(
+  private case class PlaylistInfoEntryImpl(
     path: String, lastModified: Instant, length: Int, pos: Int, id: Int
-  ) extends PlayListInfoEntry
+  ) extends PlaylistInfoEntry
 
-  private object PlayListInfoEntryImpl {
-    def apply(fields: Map[String, String]): PlayListInfoEntryImpl = PlayListInfoEntryImpl(
+  private object PlaylistInfoEntryImpl {
+    def apply(fields: Map[String, String]): PlaylistInfoEntryImpl = PlaylistInfoEntryImpl(
       fields("file"), Instant.parse(fields("Last-Modified")),
       fields("Time").toInt, fields("Pos").toInt, fields("Id").toInt
     )
   }
 
-  trait PlayListInfo {
-    val entries: imm.Seq[PlayListInfoEntry]
+  trait PlaylistInfo {
+    val entries: imm.Seq[PlaylistInfoEntry]
   }
 
-  object PlayListInfo {
-    implicit object Format extends Format[PlayListInfo] {
-      override def reads(jv: JsValue): JsResult[PlayListInfo] = JsSuccess(
-        PlayListInfoImpl(
-          (jv \ "entries").as[Seq[PlayListInfoEntry]].toList
+  object PlaylistInfo {
+    implicit object Format extends Format[PlaylistInfo] {
+      override def reads(jv: JsValue): JsResult[PlaylistInfo] = JsSuccess(
+        PlaylistInfoImpl(
+          (jv \ "entries").as[Seq[PlaylistInfoEntry]].toList
         )
       )
 
-      override def writes(in: PlayListInfo): JsValue = Json.obj(
+      override def writes(in: PlaylistInfo): JsValue = Json.obj(
         "entries" -> in.entries
       )
     }
   }
 
-  private case class PlayListInfoImpl(
-    entries: imm.Seq[PlayListInfoEntry]
-  ) extends PlayListInfo
+  private case class PlaylistInfoImpl(
+    entries: imm.Seq[PlaylistInfoEntry]
+  ) extends PlaylistInfo
 
   trait SongInfo {
     val path: String
@@ -376,10 +376,63 @@ object Response {
 
       override def writes(in:SongInfo): JsValue = Json.obj(
         "path" -> in.path,
-        "lastModified" -> in.lastModified.toEpochMilli,
+        "lastModified" -> in.lastModified.toEpochMilli.toString,
         "length" -> in.length,
         "pos" -> in.pos,
         "id" -> in.id
+      )
+    }
+  }
+
+  trait StoredPlaylistInfoEntry {
+    val name: String
+    val lastModified: Instant
+  }
+
+  private case class StoredPlaylistInfoEntryImpl(
+    name: String, lastModified: Instant
+  ) extends StoredPlaylistInfoEntry
+
+  private object StoredPlaylistInfoEntryImpl {
+    def apply(fields: Map[String, String]): StoredPlaylistInfoEntryImpl = StoredPlaylistInfoEntryImpl(
+      fields("playlist"), Instant.parse(fields("Last-Modified"))
+    )
+  }
+
+  object StoredPlaylistInfoEntry {
+    implicit object Format extends Format[StoredPlaylistInfoEntry] {
+      override def reads(jv: JsValue): JsResult[StoredPlaylistInfoEntry] = JsSuccess(
+        StoredPlaylistInfoEntryImpl(
+          (jv \ "name").as[String],
+          Instant.ofEpochMilli((jv \ "lastModified").as[String].toLong)
+        )
+      )
+
+      override def writes(in: StoredPlaylistInfoEntry): JsValue = Json.obj(
+        "name" -> in.name,
+        "lastModified" -> in.lastModified.toEpochMilli.toString
+      )
+    }
+  }
+
+  trait StoredPlaylistInfo {
+    val entries: imm.Seq[StoredPlaylistInfoEntry]
+  }
+
+  private case class StoredPlaylistInfoImpl(
+    entries: imm.Seq[StoredPlaylistInfoEntry]
+  ) extends StoredPlaylistInfo
+
+  object StoredPlaylistInfo {
+    implicit object Format extends Format[StoredPlaylistInfo] {
+      override def reads(jv: JsValue): JsResult[StoredPlaylistInfo] = JsSuccess(
+        StoredPlaylistInfoImpl(
+          (jv \ "entries").as[Seq[StoredPlaylistInfoEntry]].toList
+        )
+      )
+
+      override def writes(in: StoredPlaylistInfo): JsValue = Json.obj(
+        "entries" -> in.entries
       )
     }
   }
@@ -446,8 +499,8 @@ object Response {
         throw new ResponseException(errorNo.toInt, commandIdx.toInt, command, message)
       case OkPattern() =>
         done(new LsInfoImpl(info))
-      case LsInfo.PlayListPattern(path) =>
-        tailcall(playList(info, path))
+      case LsInfo.PlaylistPattern(path) =>
+        tailcall(playlist(info, path))
       case LsInfo.FilePattern(path) =>
         tailcall(file(info, path))
       case LsInfo.DirectoryPattern(path) =>
@@ -457,9 +510,9 @@ object Response {
         tailcall(init(info))
     }
 
-    def playList(info: imm.Seq[LsInfoEntry], path: String): TailRec[LsInfo] = in.readLine match {
+    def playlist(info: imm.Seq[LsInfoEntry], path: String): TailRec[LsInfo] = in.readLine match {
       case LsInfo.LastModifiedPattern(time) =>
-        tailcall(init(info :+ LsInfoEntry.PlayList(path, Instant.parse(time))))
+        tailcall(init(info :+ LsInfoEntry.Playlist(path, Instant.parse(time))))
       case FailPattern(errorNo, commandIdx, command, message) =>
         logger.warn("Play list is truncated path = '" + path + "'")
         throw new ResponseException(errorNo.toInt, commandIdx.toInt, command, message)
@@ -551,30 +604,61 @@ object Response {
     parse(imm.Map())
   }
 
-  def playListInfo(in: BufferedReader): PlayListInfo = {
+  def playlistInfo(in: BufferedReader): PlaylistInfo = {
     def init(
-      entries: imm.Seq[PlayListInfoEntry] = imm.Seq()
-    ): TailRec[PlayListInfo] = in.readLine match {
+      entries: imm.Seq[PlaylistInfoEntry] = imm.Seq()
+    ): TailRec[PlaylistInfo] = in.readLine match {
       case FailPattern(errorNo, commandIdx, command, message) =>
         throw new ResponseException(errorNo.toInt, commandIdx.toInt, command, message)
       case OkPattern() =>
-        done(PlayListInfoImpl(entries))
+        done(PlaylistInfoImpl(entries))
       case l =>
         val (key, value) = split(l)
         tailcall(start(entries, Map(key -> value)))
     }
 
     def start(
-      entries: imm.Seq[PlayListInfoEntry], fields: Map[String, String]
-    ): TailRec[PlayListInfo] = in.readLine match {
+      entries: imm.Seq[PlaylistInfoEntry], fields: Map[String, String]
+    ): TailRec[PlaylistInfo] = in.readLine match {
       case FailPattern(errorNo, commandIdx, command, message) =>
         throw new ResponseException(errorNo.toInt, commandIdx.toInt, command, message)
       case OkPattern() =>
-        done(PlayListInfoImpl(entries :+ PlayListInfoEntryImpl(fields)))
+        done(PlaylistInfoImpl(entries :+ PlaylistInfoEntryImpl(fields)))
       case l =>
         val (key, value) = split(l)
         if (key == "file")
-          tailcall(start(entries :+ PlayListInfoEntryImpl(fields), Map(key -> value)))
+          tailcall(start(entries :+ PlaylistInfoEntryImpl(fields), Map(key -> value)))
+        else
+          tailcall(start(entries, fields.updated(key, value)))
+    }
+
+    init().result
+  }
+
+  def listPlaylists(in: BufferedReader): StoredPlaylistInfo = {
+    def init(
+      entries: imm.Seq[StoredPlaylistInfoEntry] = imm.Seq()
+    ): TailRec[StoredPlaylistInfo] = in.readLine match {
+      case FailPattern(errorNo, commandIdx, command, message) =>
+        throw new ResponseException(errorNo.toInt, commandIdx.toInt, command, message)
+      case OkPattern() =>
+        done(StoredPlaylistInfoImpl(entries))
+      case l =>
+        val (key, value) = split(l)
+        tailcall(start(entries, Map(key -> value)))
+    }
+
+    def start(
+      entries: imm.Seq[StoredPlaylistInfoEntry], fields: Map[String, String]
+    ): TailRec[StoredPlaylistInfo] = in.readLine match {
+      case FailPattern(errorNo, commandIdx, command, message) =>
+        throw new ResponseException(errorNo.toInt, commandIdx.toInt, command, message)
+      case OkPattern() =>
+        done(StoredPlaylistInfoImpl(entries :+ StoredPlaylistInfoEntryImpl(fields)))
+      case l =>
+        val (key, value) = split(l)
+        if (key == "playlist")
+          tailcall(start(entries :+ StoredPlaylistInfoEntryImpl(fields), Map(key -> value)))
         else
           tailcall(start(entries, fields.updated(key, value)))
     }

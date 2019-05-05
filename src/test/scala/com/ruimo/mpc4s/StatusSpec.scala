@@ -36,8 +36,8 @@ class StatusSpec extends Specification {
         status.random === false
         status.single === Response.SinglePlay.No
         status.consume === false
-        status.playList === 65
-        status.playListLength === 2
+        status.playlist === 65
+        status.playlistLength === 2
         status.mixRampDb.get must beCloseTo(0, 0.1)
         status.state === PlayState.Stop
         status.song === Some(0)
