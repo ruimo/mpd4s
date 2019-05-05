@@ -99,7 +99,7 @@ object Mpc {
       Response.listPlaylists(in)
     }
 
-    override def load(name: String, range: Option[(Int, Int)]): Unit = {
+    override def load(name: String, range: Option[(Int, Int)] = None): Unit = {
       Request.load(name, range)
       Response.load(in)
     }
@@ -140,7 +140,7 @@ object Mpc {
       this
     }
 
-    override def load(name: String, range: Option[(Int, Int)]): BatchConnection = {
+    override def load(name: String, range: Option[(Int, Int)] = None): BatchConnection = {
       Request.load(name, range)
       this
     }
