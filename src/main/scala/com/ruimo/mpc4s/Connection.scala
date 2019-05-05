@@ -17,4 +17,5 @@ trait Connection {
   def pause(): Unit
   def playlistInfo(): Response.PlaylistInfo
   def listPlaylists(): Response.StoredPlaylistInfo
+  def load(name: String, range: Option[(Int, Int)]): Unit
 }

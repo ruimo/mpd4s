@@ -98,6 +98,11 @@ object Mpc {
       Request.listPlaylists.writeln(out)
       Response.listPlaylists(in)
     }
+
+    override def load(name: String, range: Option[(Int, Int)]): Unit = {
+      Request.load(name, range)
+      Response.load(in)
+    }
   }
 
   private class BatchConnectionImpl(
@@ -132,6 +137,11 @@ object Mpc {
   
     override def pause(): BatchConnection = {
       Request.pause.writeln(out)
+      this
+    }
+
+    override def load(name: String, range: Option[(Int, Int)]): BatchConnection = {
+      Request.load(name, range)
       this
     }
   }

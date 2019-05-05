@@ -33,15 +33,15 @@ object Request {
   object currentSong extends Command("currentsong")
 
   class LsInfo(path: Option[String]) extends Command("lsinfo") {
-    override def args = path.toList
+    override val args = path.toList
   }
 
   class Add(path: String) extends Command("add") {
-    override def args = imm.Seq(path)
+    override val args = imm.Seq(path)
   }
 
   class Play(idx: Option[Int]) extends Command("play") {
-    override def args = idx.toList.map(_.toString)
+    override val args = idx.toList.map(_.toString)
   }
 
   def lsInfo(path: Option[String]): Request = new LsInfo(path)
@@ -50,4 +50,8 @@ object Request {
   object pause extends Command("pause")
   object playlistInfo extends Command("playlistinfo")
   object listPlaylists extends Command("listplaylists")
+  class Load(name: String, range: Option[(Int, Int)]) extends Command("load") {
+    override val args = imm.Seq(name) ++ range.map { case (from, to) => " " + from + ":" + to }
+  }
+  def load(name: String, range: Option[(Int, Int)]) = new Load(name, range)
 }
