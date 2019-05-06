@@ -20,4 +20,5 @@ trait Connection {
   def load(name: String, range: Option[(Int, Int)] = None): Unit
   def deleteId(id: Int): Unit
   def moveId(fromId: Int, toIndex: Int): Unit
+  def save(name: String): Unit
 }

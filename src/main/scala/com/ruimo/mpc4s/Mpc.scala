@@ -172,6 +172,11 @@ object Mpc {
       Request.moveId(fromId, toIndex).writeln(out)
       Response.moveId(in)
     }
+
+    override def save(name: String): Unit = {
+      Request.save(name).writeln(out)
+      Response.save(in)
+    }
   }
 
   private class BatchConnectionImpl(
@@ -221,6 +226,11 @@ object Mpc {
 
     override def moveId(fromId: Int, toIndex: Int): BatchConnection = {
       Request.moveId(fromId, toIndex)
+      this
+    }
+
+    override def save(name: String): BatchConnection = {
+      Request.save(name)
       this
     }
   }

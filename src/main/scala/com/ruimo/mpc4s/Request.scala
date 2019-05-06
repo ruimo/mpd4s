@@ -62,4 +62,8 @@ object Request {
     override val args = imm.Seq(fromId.toString, toIndex.toString)
   }
   def moveId(fromId: Int, toIndex: Int): Request = new MoveId(fromId, toIndex)
+  class Save(name: String) extends Command("save") {
+    override val args = imm.Seq(name)
+  }
+  def save(name: String): Request = new Save(name)
 }
