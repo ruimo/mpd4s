@@ -715,4 +715,12 @@ object Response {
     case _ @ l =>
       throw new InternalError(new IllegalArgumentException("Invalid response '" + l + "'"))
   }
+
+  def playId(in: BufferedReader): Unit = in.readLine match {
+    case FailPattern(errorNo, commandIdx, command, message) =>
+      throw new ResponseException(errorNo.toInt, commandIdx.toInt, command, message)
+    case OkPattern() =>
+    case _ @ l =>
+      throw new InternalError(new IllegalArgumentException("Invalid response '" + l + "'"))
+  }
 }

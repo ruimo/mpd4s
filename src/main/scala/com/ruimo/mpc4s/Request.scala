@@ -35,18 +35,23 @@ object Request {
   class LsInfo(path: Option[String]) extends Command("lsinfo") {
     override val args = path.toList
   }
+  def lsInfo(path: Option[String]): Request = new LsInfo(path)
 
   class Add(path: String) extends Command("add") {
     override val args = imm.Seq(path)
   }
+  def add(path: String): Request = new Add(path)
 
   class Play(idx: Option[Int]) extends Command("play") {
     override val args = idx.toList.map(_.toString)
   }
-
-  def lsInfo(path: Option[String]): Request = new LsInfo(path)
-  def add(path: String): Request = new Add(path)
   def play(idx: Option[Int]): Request = new Play(idx)
+
+  class PlayId(id: Int) extends Command("playid") {
+    override val args = imm.Seq(id.toString)
+  }
+  def playId(id: Int): Request = new PlayId(id)
+
   object pause extends Command("pause")
   object playlistInfo extends Command("playlistinfo")
   object listPlaylists extends Command("listplaylists")

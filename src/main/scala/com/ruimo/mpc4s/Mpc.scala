@@ -204,6 +204,11 @@ object Mpc {
       Request.rename(name, newName).writeln(out)
       Response.rename(in)
     }
+
+    override def playId(id: Int): Unit = {
+      Request.playId(id).writeln(out)
+      Response.playId(in)
+    }
   }
 
   private class BatchConnectionImpl(
@@ -268,6 +273,11 @@ object Mpc {
 
     override def rename(name: String, newName: String): BatchConnection = {
       Request.rename(name, newName).writeln(out)
+      this
+    }
+
+    override def playId(id: Int): BatchConnection = {
+      Request.playId(id).writeln(out)
       this
     }
   }
