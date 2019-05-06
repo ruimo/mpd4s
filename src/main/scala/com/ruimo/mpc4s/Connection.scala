@@ -22,4 +22,5 @@ trait Connection {
   def moveId(fromId: Int, toIndex: Int): Unit
   def save(name: String): Unit
   def rm(name: String): Unit
+  def rename(name: String, newName: String): Unit
 }

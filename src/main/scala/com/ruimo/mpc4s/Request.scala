@@ -70,4 +70,8 @@ object Request {
     override val args = imm.Seq(name)
   }
   def rm(name: String): Request = new Rm(name)
+  class Rename(name: String, newName: String) extends Command("rename") {
+    override val args = imm.Seq(name, newName)
+  }
+  def rename(name: String, newName: String) = new Rename(name, newName)
 }

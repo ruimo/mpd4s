@@ -199,6 +199,11 @@ object Mpc {
       Request.rm(name).writeln(out)
       Response.rm(in)
     }
+
+    override def rename(name: String, newName: String): Unit = {
+      Request.rename(name, newName).writeln(out)
+      Response.rename(in)
+    }
   }
 
   private class BatchConnectionImpl(
@@ -258,6 +263,11 @@ object Mpc {
 
     override def rm(name: String): BatchConnection = {
       Request.rm(name).writeln(out)
+      this
+    }
+
+    override def rename(name: String, newName: String): BatchConnection = {
+      Request.rename(name, newName).writeln(out)
       this
     }
   }
