@@ -177,6 +177,11 @@ object Mpc {
       Request.save(name).writeln(out)
       Response.save(in)
     }
+
+    override def rm(name: String): Unit = {
+      Request.rm(name).writeln(out)
+      Response.rm(in)
+    }
   }
 
   private class BatchConnectionImpl(
@@ -231,6 +236,11 @@ object Mpc {
 
     override def save(name: String): BatchConnection = {
       Request.save(name)
+      this
+    }
+
+    override def rm(name: String): BatchConnection = {
+      Request.rm(name)
       this
     }
   }

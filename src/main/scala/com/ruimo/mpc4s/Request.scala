@@ -66,4 +66,8 @@ object Request {
     override val args = imm.Seq(name)
   }
   def save(name: String): Request = new Save(name)
+  class Rm(name: String) extends Command("rm") {
+    override val args = imm.Seq(name)
+  }
+  def rm(name: String): Request = new Rm(name)
 }

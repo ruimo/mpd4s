@@ -21,4 +21,5 @@ trait Connection {
   def deleteId(id: Int): Unit
   def moveId(fromId: Int, toIndex: Int): Unit
   def save(name: String): Unit
+  def rm(name: String): Unit
 }

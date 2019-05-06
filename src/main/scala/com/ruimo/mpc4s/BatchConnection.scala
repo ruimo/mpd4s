@@ -16,4 +16,5 @@ trait BatchConnection {
   def deleteId(id: Int): BatchConnection
   def moveId(fromId: Int, toIndex: Int): BatchConnection
   def save(name: String): BatchConnection
+  def rm(name: String): BatchConnection
 }
