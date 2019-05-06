@@ -76,14 +76,31 @@ class Mpc(socketFactory: () => Socket) {
   }.get
 
   def withBatchConnection(f: BatchConnection => Unit): Unit = using(socketFactory()) { socket =>
-    val in = new BufferedReader(new InputStreamReader(socket.getInputStream, "utf-8"))
-    val out = new BufferedWriter(new OutputStreamWriter(socket.getOutputStream, "utf-8"))
-    out.write("command_list_begin\n")
-    val conn = new BatchConnectionImpl(version(in), in, out)
-    f(conn)
-    out.write("command_list_end\n")
-    out.flush()
-    Response.batchResult(in)
+    val readerLog = new StringBuilder()
+    val writerLog = new StringBuilder()
+    val in: BufferedReader = new BufferedReader(
+      {
+        val reader = new InputStreamReader(socket.getInputStream, "utf-8")
+        if (logger.isDebugEnabled()) new LoggingReader(reader, readerLog) else reader
+      }
+    )
+    val out: BufferedWriter = {
+      val writer = new OutputStreamWriter(socket.getOutputStream, "utf-8")
+      new BufferedWriter(if (logger.isDebugEnabled()) new LoggingWriter(writer, writerLog) else writer)
+    }
+    try {
+      out.write("command_list_begin\n")
+      val conn = new BatchConnectionImpl(version(in), in, out)
+      f(conn)
+      out.write("command_list_end\n")
+      out.flush()
+      Response.batchResult(in)
+    } finally {
+      if (logger.isErrorEnabled()) {
+        logger.debug("Mpd request: '" + writerLog.toString + "'")
+        logger.debug("Mpd response: '" + readerLog.toString + "'")
+      }
+    }
   }.get
 }
 
@@ -220,27 +237,27 @@ object Mpc {
     }
 
     override def load(name: String, range: Option[(Int, Int)] = None): BatchConnection = {
-      Request.load(name, range)
+      Request.load(name, range).writeln(out)
       this
     }
 
     override def deleteId(id: Int): BatchConnection = {
-      Request.deleteId(id)
+      Request.deleteId(id).writeln(out)
       this
     }
 
     override def moveId(fromId: Int, toIndex: Int): BatchConnection = {
-      Request.moveId(fromId, toIndex)
+      Request.moveId(fromId, toIndex).writeln(out)
       this
     }
 
     override def save(name: String): BatchConnection = {
-      Request.save(name)
+      Request.save(name).writeln(out)
       this
     }
 
     override def rm(name: String): BatchConnection = {
-      Request.rm(name)
+      Request.rm(name).writeln(out)
       this
     }
   }
