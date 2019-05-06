@@ -28,7 +28,7 @@ class SaveSpec extends Specification {
     "Can handle fail" in {
       val in = new ByteArrayInputStream((
         "OK MPD 0.19.0\n"
-          + """ACK [5@0] {} unknown command "fb"\n"""
+          + """ACK [56@0] {save} Playlist already exists\n"""
       ).getBytes("utf-8"))
       val out = new ByteArrayOutputStream()
       val socket = new MockSocket(in, out)
@@ -41,10 +41,10 @@ class SaveSpec extends Specification {
         }
       } catch {
         case e: ResponseException =>
-          e.errorNo === 5
+          e.errorNo === 56
           e.commandIdx === 0
-          e.command === ""
-          e.message === """unknown command "fb"\n"""
+          e.command === "save"
+          e.message === """Playlist already exists\n"""
       }
 
       socket.closed === true

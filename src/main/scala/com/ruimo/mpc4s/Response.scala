@@ -27,7 +27,9 @@ object Response {
     val commandIdx: Int,
     val command: String,
     val message: String
-  ) extends Exception
+  ) extends Exception(
+    "errNo: " + errorNo + ", commandIdx: " + commandIdx + ", command: '" + command + "', message: '" + message + "'"
+  )
 
   class InternalException(msg: String = null, cause: Throwable = null) extends Exception(msg, cause)
 
