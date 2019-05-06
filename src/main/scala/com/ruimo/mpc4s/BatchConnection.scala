@@ -14,4 +14,5 @@ trait BatchConnection {
   def pause(): BatchConnection
   def load(name: String, range: Option[(Int, Int)] = None): BatchConnection
   def deleteId(id: Int): BatchConnection
+  def moveId(fromId: Int, toIndex: Int): BatchConnection
 }

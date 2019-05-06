@@ -167,6 +167,11 @@ object Mpc {
       Request.deleteId(id).writeln(out)
       Response.deleteId(in)
     }
+
+    override def moveId(fromId: Int, toIndex: Int): Unit = {
+      Request.moveId(fromId, toIndex).writeln(out)
+      Response.moveId(in)
+    }
   }
 
   private class BatchConnectionImpl(
@@ -211,6 +216,11 @@ object Mpc {
 
     override def deleteId(id: Int): BatchConnection = {
       Request.deleteId(id)
+      this
+    }
+
+    override def moveId(fromId: Int, toIndex: Int): BatchConnection = {
+      Request.moveId(fromId, toIndex)
       this
     }
   }

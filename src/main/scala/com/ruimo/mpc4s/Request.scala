@@ -58,4 +58,8 @@ object Request {
     override val args = imm.Seq(id.toString)
   }
   def deleteId(id: Int): Request = new DeleteId(id)
+  class MoveId(fromId: Int, toIndex: Int) extends Command("moveid") {
+    override val args = imm.Seq(fromId.toString, toIndex.toString)
+  }
+  def moveId(fromId: Int, toIndex: Int): Request = new MoveId(fromId, toIndex)
 }
