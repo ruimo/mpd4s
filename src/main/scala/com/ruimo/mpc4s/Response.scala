@@ -15,6 +15,7 @@ object Response {
 
   val OkPattern = "OK".r
   val FailPattern = """ACK \[([0-9]+)@(.*)\] \{(.*)\} (.*)""".r
+  val UpdatePattern = "updating_db: [0-9]+".r
 
   def split(l: String): (String, String) = {
     val idx = l.indexOf(':')
@@ -727,7 +728,7 @@ object Response {
   def update(in: BufferedReader): Unit = in.readLine match {
     case FailPattern(errorNo, commandIdx, command, message) =>
       throw new ResponseException(errorNo.toInt, commandIdx.toInt, command, message)
-    case OkPattern() =>
+    case UpdatePattern() =>
     case _ @ l =>
       throw new InternalError(new IllegalArgumentException("Invalid response '" + l + "'"))
   }

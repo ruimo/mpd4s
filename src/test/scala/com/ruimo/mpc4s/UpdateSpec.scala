@@ -11,7 +11,7 @@ class UpdateSpec extends Specification {
     "Can handle ok" in {
       val in = new ByteArrayInputStream((
         "OK MPD 0.19.0\n"
-          + "OK\n"
+          + "updating_db: 9\n"
       ).getBytes("utf-8"))
       val out = new ByteArrayOutputStream()
       val socket = new MockSocket(in, out)
