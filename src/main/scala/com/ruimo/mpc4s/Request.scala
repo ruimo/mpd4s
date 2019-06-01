@@ -79,4 +79,8 @@ object Request {
     override val args = imm.Seq(name, newName)
   }
   def rename(name: String, newName: String) = new Rename(name, newName)
+  class Update(uri: String) extends Command("update") {
+    override val args = imm.Seq(uri)
+  }
+  def update(uri: String) = new Update(uri)
 }

@@ -24,4 +24,5 @@ trait Connection {
   def rm(name: String): Unit
   def rename(name: String, newName: String): Unit
   def playId(id: Int): Unit
+  def update(uri: String): Unit
 }

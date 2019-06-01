@@ -209,6 +209,11 @@ object Mpc {
       Request.playId(id).writeln(out)
       Response.playId(in)
     }
+
+    override def update(uri: String): Unit = {
+      Request.update(uri).writeln(out)
+      Response.update(in)
+    }
   }
 
   private class BatchConnectionImpl(
@@ -278,6 +283,11 @@ object Mpc {
 
     override def playId(id: Int): BatchConnection = {
       Request.playId(id).writeln(out)
+      this
+    }
+
+    override def update(uri: String): BatchConnection = {
+      Request.update(uri).writeln(out)
       this
     }
   }
