@@ -18,6 +18,6 @@ trait BatchConnection {
   def save(name: String): BatchConnection
   def rm(name: String): BatchConnection
   def rename(name: String, newName: String): BatchConnection
-  def update(uri: String): BatchConnection
+  def update(uri: Option[String]): BatchConnection
   def playId(id: Int): BatchConnection
 }

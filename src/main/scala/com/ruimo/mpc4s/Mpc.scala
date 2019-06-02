@@ -210,7 +210,7 @@ object Mpc {
       Response.playId(in)
     }
 
-    override def update(uri: String): Unit = {
+    override def update(uri: Option[String]): Unit = {
       Request.update(uri).writeln(out)
       Response.update(in)
     }
@@ -286,7 +286,7 @@ object Mpc {
       this
     }
 
-    override def update(uri: String): BatchConnection = {
+    override def update(uri: Option[String]): BatchConnection = {
       Request.update(uri).writeln(out)
       this
     }

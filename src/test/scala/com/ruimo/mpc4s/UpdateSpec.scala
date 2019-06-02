@@ -18,11 +18,28 @@ class UpdateSpec extends Specification {
 
       new Mpc(() => socket).withConnection { conn =>
         conn.version === Version("0.19.0")
-        conn.update("testuri")
+        conn.update(Some("testuri"))
       }
 
       socket.closed === true
       new String(out.toByteArray, "utf-8") === "update testuri\n"
+    }
+
+    "Can handle none" in {
+      val in = new ByteArrayInputStream((
+        "OK MPD 0.19.0\n"
+          + "updating_db: 9\n"
+      ).getBytes("utf-8"))
+      val out = new ByteArrayOutputStream()
+      val socket = new MockSocket(in, out)
+
+      new Mpc(() => socket).withConnection { conn =>
+        conn.version === Version("0.19.0")
+        conn.update(None)
+      }
+
+      socket.closed === true
+      new String(out.toByteArray, "utf-8") === "update\n"
     }
 
     "Can handle fail" in {
@@ -36,7 +53,7 @@ class UpdateSpec extends Specification {
       try {
         new Mpc(() => socket).withConnection { conn =>
           conn.version === Version("0.19.0")
-          conn.update("testuri")
+          conn.update(Some("testuri"))
           failure
         }
       } catch {
