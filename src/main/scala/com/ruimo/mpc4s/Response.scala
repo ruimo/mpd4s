@@ -521,7 +521,7 @@ object Response {
         done(new LsInfoImpl(info))
       case _ @ l=>
         logger.warn("lsInfo.playlist(): Unknown lsinfo entry '" + l + "'")
-        tailcall(playlist(info))
+        tailcall(playlist(info, path))
     }
 
     def file(
@@ -546,7 +546,7 @@ object Response {
         done(new LsInfoImpl(info))
       case _ @ l=>
         logger.warn("lsInfo.file(): Unknown lsinfo entry '" + l + "'")
-        tailcall(file(info))
+        tailcall(file(info, path, lastModified, length))
     }
 
     def directory(info: imm.Seq[LsInfoEntry], path: String): TailRec[LsInfo] = in.readLine match {
@@ -560,7 +560,7 @@ object Response {
         done(new LsInfoImpl(info))
       case _ @ l =>
         logger.warn("lsInfo.directory(): Unknown lsinfo entry '" + l + "'")
-        tailcall(directory(info))
+        tailcall(directory(info, path))
     }
 
     init().result
