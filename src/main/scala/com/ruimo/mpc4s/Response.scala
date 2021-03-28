@@ -239,10 +239,7 @@ object Response {
     ) extends StatusInfo
 
     def apply(in: imm.Map[String, String]): StatusInfo = StatusInfoImpl(
-      volume = in("volume").toInt match {
-        case -1 => None
-        case value => Some(Volume(value))
-      },
+      volume = in.get("volume").map(_.toInt).flatMap(v => if (v == -1) None else Some(Volume(v))),
       repeat = in("repeat") == "1",
       random = in("random") == "1",
       single = SinglePlay(in("single")),
