@@ -506,7 +506,7 @@ object Response {
       case LsInfo.DirectoryPattern(path) =>
         tailcall(directory(info, path))
       case _ @ l=>
-        logger.warn("Unknown lsinfo entry '" + l + "'")
+        logger.warn("lsInfo.init(): Unknown lsinfo entry '" + l + "'")
         tailcall(init(info))
     }
 
@@ -520,7 +520,7 @@ object Response {
         logger.warn("Play list is truncated path = '" + path + "'")
         done(new LsInfoImpl(info))
       case _ @ l=>
-        logger.warn("Unknown lsinfo entry '" + l + "'")
+        logger.warn("lsInfo.playlist(): Unknown lsinfo entry '" + l + "'")
         tailcall(init(info))
     }
 
@@ -545,7 +545,7 @@ object Response {
         logger.warn("File is truncated path = '" + path + "'")
         done(new LsInfoImpl(info))
       case _ @ l=>
-        logger.warn("Unknown lsinfo entry '" + l + "'")
+        logger.warn("lsInfo.file(): Unknown lsinfo entry '" + l + "'")
         tailcall(init(info))
     }
 
@@ -559,7 +559,7 @@ object Response {
         logger.warn("Play list is truncated path = '" + path + "'")
         done(new LsInfoImpl(info))
       case _ @ l =>
-        logger.warn("Unknown lsinfo entry '" + l + "'")
+        logger.warn("lsInfo.directory(): Unknown lsinfo entry '" + l + "'")
         tailcall(init(info))
     }
 
