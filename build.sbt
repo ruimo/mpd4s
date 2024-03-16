@@ -1,4 +1,4 @@
-scalaVersion := "2.12.8"
+scalaVersion := "3.3.3"
 
 name := "mpc4s"
 organization := "com.ruimo"
@@ -24,12 +24,12 @@ publishTo := Some(
 libraryDependencies += "org.slf4j" % "slf4j-api" % "1.7.26"
 libraryDependencies += "org.slf4j" % "slf4j-simple" % "1.7.26"
 
-libraryDependencies += "com.typesafe.play" %% "play-json" % "2.7.3"
+libraryDependencies += "com.typesafe.play" %% "play-json" % "2.10.4"
 
 scalacOptions ++= Seq("-unchecked", "-deprecation", "-feature")
 
-resolvers += "ruimo.com" at "http://static.ruimo.com/release"
+resolvers += "ruimo.com" at "https://static.ruimo.com/release"
 
 // https://mvnrepository.com/artifact/org.specs2/specs2-core
-libraryDependencies += "org.specs2" %% "specs2-core" % "4.5.1" % Test
-libraryDependencies += "com.ruimo" %% "scoins" % "1.22"
+libraryDependencies += "org.specs2" %% "specs2-core" % "5.5.1" % Test
+libraryDependencies += "com.ruimo" %% "scoins" % "1.29"

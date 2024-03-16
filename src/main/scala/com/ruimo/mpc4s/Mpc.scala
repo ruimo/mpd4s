@@ -3,12 +3,12 @@ package com.ruimo.mpc4s
 import java.net.InetAddress
 import java.net.Socket
 
-import com.ruimo.scoins.LoanPattern._
 import java.io._
 
 import org.slf4j.LoggerFactory
 import org.slf4j.Logger
 import java.io.FilterReader
+import scala.util.Using
 
 case class Version(value: String)
 
@@ -51,7 +51,7 @@ class Mpc(socketFactory: () => Socket) {
     }
   }
 
-  def withConnection[T](f: Connection => T): T = using(socketFactory()) { socket =>
+  def withConnection[T](f: Connection => T): T = Using.resource(socketFactory()) { socket =>
     val readerLog = new StringBuilder()
     val writerLog = new StringBuilder()
     val in: BufferedReader = new BufferedReader(
@@ -73,9 +73,9 @@ class Mpc(socketFactory: () => Socket) {
         logger.debug("Mpd response: '" + readerLog.toString + "'")
       }
     }
-  }.get
+  }
 
-  def withBatchConnection(f: BatchConnection => Unit): Unit = using(socketFactory()) { socket =>
+  def withBatchConnection(f: BatchConnection => Unit): Unit = Using.resource(socketFactory()) { socket =>
     val readerLog = new StringBuilder()
     val writerLog = new StringBuilder()
     val in: BufferedReader = new BufferedReader(
@@ -101,7 +101,7 @@ class Mpc(socketFactory: () => Socket) {
         logger.debug("Mpd response: '" + readerLog.toString + "'")
       }
     }
-  }.get
+  }
 }
 
 object Mpc {

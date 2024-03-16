@@ -10,7 +10,7 @@ class MockSocket(
 
   override def getInputStream(): InputStream = in
   override def getOutputStream(): OutputStream = out
-  override def close() {
+  override def close(): Unit = {
     closed = true
   }
 }

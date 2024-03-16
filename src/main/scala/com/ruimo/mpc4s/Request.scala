@@ -9,11 +9,11 @@ trait Request {
 
   def args: imm.Seq[String] = imm.Seq()
 
-  def writeln(w: Writer) {
+  def writeln(w: Writer): Unit = {
     writeln(w, toCommand)
   }
 
-  private def writeln(w: Writer, l: String) {
+  private def writeln(w: Writer, l: String): Unit = {
     w.write(l)
     if (! args.isEmpty) {
       w.write(" ")
@@ -56,7 +56,7 @@ object Request {
   object playlistInfo extends Command("playlistinfo")
   object listPlaylists extends Command("listplaylists")
   class Load(name: String, range: Option[(Int, Int)]) extends Command("load") {
-    override val args = imm.Seq(name) ++ range.map { case (from, to) => from + ":" + to }
+    override val args = imm.Seq(name) ++ range.map { case (from, to) => from.toString + ":" + to }
   }
   def load(name: String, range: Option[(Int, Int)]): Request = new Load(name, range)
   class DeleteId(id: Int) extends Command("deleteid") {

@@ -14,7 +14,7 @@ object RequestParam {
   implicit def fromString(s: String): RequestParam[String] = {
     @tailrec def escape(needQuote: Boolean = false, buf: StringBuilder = new StringBuilder, i: Int = 0): String =
       if (i >= s.length)
-        if (needQuote) '"' + buf.toString + '"' else buf.toString
+        if (needQuote) '"'.toString + buf.toString + '"' else buf.toString
       else {
         val c = s.charAt(i)
         if (c == ' ') {
